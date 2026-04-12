@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crop Calendar – AgriLearn</title>
+    <meta name="description" content="Monthly crop planting and harvesting calendar for Indian farmers. Know exactly what to sow and harvest every month of the year." />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4ade80" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <style>
+      /* ── Calendar-specific overrides ── */
+      .cal-wrap {
+        position: relative;
+        z-index: 1;
+      }
+      .cal-header {
+        text-align: center;
+        padding: 4rem 2rem 1.5rem;
+      }
+      .cal-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, #ffffff 0%, #86efac 50%, #4ade80 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+      }
+      .cal-sub {
+        color: var(--text-secondary);
+        max-width: 520px;
+        margin: 0 auto 1.5rem;
+        font-size: 1rem;
+      }
+      /* Legend */
+      .season-legend {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 0 2rem 1.25rem;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.83rem;
+        color: var(--text-secondary);
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        padding: 0.35rem 0.9rem;
+        border-radius: 99px;
+        backdrop-filter: blur(8px);
+      }
+      .ldot {
+        width: 10px; height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+      }
+      .ldot.k { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.5); }
+      .ldot.r { background: #60a5fa; box-shadow: 0 0 8px rgba(96,165,250,0.5); }
+      .ldot.z { background: #f472b6; box-shadow: 0 0 8px rgba(244,114,182,0.5); }
+
+      /* Filter tabs */
+      .filter-tabs {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 0 2rem 2rem;
+      }
+      .ftab {
+        padding: 0.45rem 1.2rem;
+        border-radius: 99px;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        font-family: 'Inter', sans-serif;
+        backdrop-filter: blur(8px);
+      }
+      .ftab:hover, .ftab.active {
+        background: rgba(74,222,128,0.15);
+        border-color: var(--accent);
+        color: var(--accent);
+        box-shadow: 0 0 20px rgba(74,222,128,0.15);
+      }
+
+      /* Month grid */
+      .mgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.25rem;
+        padding: 0 2.5rem 4rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* Month card */
+      .mcard {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 24px;
+        padding: 1.5rem;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        position: relative;
+        overflow: hidden;
+      }
+      .mcard::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(74,222,128,0.04), transparent);
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      .mcard:hover {
+        transform: translateY(-5px);
+        border-color: rgba(74,222,128,0.35);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35), 0 0 0 1px rgba(74,222,128,0.1);
+      }
+      .mcard:hover::before { opacity: 1; }
+      .mcard.this-month {
+        border-color: rgba(74,222,128,0.55);
+        box-shadow: 0 0 0 1px rgba(74,222,128,0.25), 0 16px 40px rgba(0,0,0,0.3), 0 0 30px rgba(74,222,128,0.08);
+      }
+      .mcard.cal-hidden { display: none !important; }
+
+      /* Card header */
+      .mcard-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.6rem;
+      }
+      .mname {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #f0fff0;
+      }
+      .now-pill {
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(74,222,128,0.2);
+        color: #4ade80;
+        border: 1px solid rgba(74,222,128,0.4);
+        padding: 0.2rem 0.65rem;
+        border-radius: 99px;
+        animation: pulse 2s infinite;
+      }
+
+      /* Season badge */
+      .sbadge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 0.2rem 0.7rem;
+        border-radius: 99px;
+        margin-bottom: 1rem;
+      }
+      .sbadge.k { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+      .sbadge.r { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
+      .sbadge.z { background: rgba(244,114,182,0.12); color: #f472b6; border: 1px solid rgba(244,114,182,0.25); }
+
+      /* Crop sections */
+      .csec { margin-top: 0.6rem; }
+      .csec-title {
+        font-size: 0.67rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #6aaa6a;
+        margin-bottom: 0.4rem;
+      }
+      .ctags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+      }
+      .ctag {
+        font-size: 0.72rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 99px;
+        transition: all 0.2s;
+      }
+      .ctag:hover { transform: scale(1.05); }
+      .ctag.s {
+        background: rgba(74,222,128,0.08);
+        border: 1px solid rgba(74,222,128,0.2);
+        color: #4ade80;
+      }
+      .ctag.g {
+        background: rgba(134,239,172,0.06);
+        border: 1px solid rgba(134,239,172,0.15);
+        color: #86efac;
+      }
+      .ctag.h {
+        background: rgba(251,191,36,0.08);
+        border: 1px solid rgba(251,191,36,0.22);
+        color: #fbbf24;
+      }
+
+      /* Tip */
+      .mtip {
+        font-size: 0.77rem;
+        color: #6aaa6a;
+        margin-top: 0.85rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        line-height: 1.55;
+      }
+
+      /* Responsive */
+      @media (max-width: 640px) {
+        .mgrid { padding: 0 1rem 3rem; grid-template-columns: 1fr; }
+        .cal-header { padding: 2.5rem 1rem 1rem; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- NAVBAR -->
+    <nav>
+      <a href="index.html" class="nav-logo">🌱 AgriLearn</a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="chatbot.html">AI Assistant</a></li>
+        <li><a href="calendar.html" class="active">📅 Calendar</a></li>
+        <li><a href="diseases.html">🐛 Diseases</a></li>
+        <li><a href="fertilizer.html">🧪 Fertilizer</a></li>
+      </ul>
+      <div class="nav-right">
+        <select class="lang-select" onchange="changeLanguage(this.value)" id="langSelect" aria-label="Select language">
+          <option value="en">🌐 English</option>
+          <option value="mr">🌐 Marathi</option>
+          <option value="hi">🌐 Hindi</option>
+          <option value="ta">🌐 Tamil</option>
+          <option value="te">🌐 Telugu</option>
+        </select>
+        <button class="profile-btn" id="profileBtn" onclick="openAuth()" aria-label="Profile">
+          <span>👤</span><span>Sign In</span>
+        </button>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle theme">🌙</button>
+      </div>
+    </nav>
+
+    <div class="cal-wrap">
+
+      <!-- HEADER -->
+      <div class="cal-header">
+        <span class="hero-badge">🌾 Indian Agriculture</span>
+        <h1 class="cal-title">Crop Calendar 📅</h1>
+        <p class="cal-sub">Your month-by-month guide to sowing and harvesting — tailored for Indian farmers</p>
+      </div>
+
+      <!-- SEASON LEGEND -->
+      <div class="season-legend">
+        <div class="legend-item"><span class="ldot k"></span> ☀️ Kharif — Monsoon (Jun–Oct)</div>
+        <div class="legend-item"><span class="ldot r"></span> ❄️ Rabi — Winter (Oct–Mar)</div>
+        <div class="legend-item"><span class="ldot z"></span> 🌸 Zaid — Summer (Mar–Jun)</div>
+      </div>
+
+      <!-- FILTER TABS -->
+      <div class="filter-tabs">
+        <button class="ftab active" data-s="all"    onclick="filterSeason('all',this)">All Seasons</button>
+        <button class="ftab"        data-s="kharif" onclick="filterSeason('kharif',this)">☀️ Kharif</button>
+        <button class="ftab"        data-s="rabi"   onclick="filterSeason('rabi',this)">❄️ Rabi</button>
+        <button class="ftab"        data-s="zaid"   onclick="filterSeason('zaid',this)">🌸 Zaid</button>
+      </div>
+
+      <!-- MONTH GRID -->
+      <div class="mgrid" id="monthGrid">
+
+        <!-- JANUARY -->
+        <div class="mcard" data-s="rabi" data-m="0">
+          <div class="mcard-head"><div class="mname">🗓 January</div></div>
+          <span class="sbadge r">❄️ Rabi Season</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow / Prepare</div>
+            <div class="ctags">
+              <span class="ctag s">Sunflower</span>
+              <span class="ctag s">Summer Groundnut</span>
+              <span class="ctag s">Bitter Gourd (nursery)</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌿 Growing Strong</div>
+            <div class="ctags">
+              <span class="ctag g">Wheat</span>
+              <span class="ctag g">Barley</span>
+              <span class="ctag g">Mustard</span>
+              <span class="ctag g">Chickpea</span>
+              <span class="ctag g">Peas</span>
+              <span class="ctag g">Lentils</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Onion</span>
+              <span class="ctag h">Spinach</span>
+              <span class="ctag h">Radish</span>
+              <span class="ctag h">Carrot</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Protect Rabi crops from cold waves & frost. Apply nitrogen top-dressing to wheat at tillering stage for maximum yield.</div>
+        </div>
+
+        <!-- FEBRUARY -->
+        <div class="mcard" data-s="rabi" data-m="1">
+          <div class="mcard-head"><div class="mname">🗓 February</div></div>
+          <span class="sbadge r">❄️ Rabi Season</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow / Prepare</div>
+            <div class="ctags">
+              <span class="ctag s">Cucumber (nursery)</span>
+              <span class="ctag s">Watermelon (nursery)</span>
+              <span class="ctag s">Bitter Gourd</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌿 Growing Strong</div>
+            <div class="ctags">
+              <span class="ctag g">Wheat</span>
+              <span class="ctag g">Mustard</span>
+              <span class="ctag g">Chickpea</span>
+              <span class="ctag g">Sugarcane</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Mustard (early)</span>
+              <span class="ctag h">Carrot</span>
+              <span class="ctag h">Radish</span>
+              <span class="ctag h">Peas</span>
+              <span class="ctag h">Onion</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Apply 2nd nitrogen dose to wheat. Watch for aphid attack on mustard — spray neem oil if infestation is heavy.</div>
+        </div>
+
+        <!-- MARCH -->
+        <div class="mcard" data-s="zaid" data-m="2">
+          <div class="mcard-head"><div class="mname">🗓 March</div></div>
+          <span class="sbadge z">🌸 Zaid Season</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow Now</div>
+            <div class="ctags">
+              <span class="ctag s">Cucumber</span>
+              <span class="ctag s">Watermelon</span>
+              <span class="ctag s">Muskmelon</span>
+              <span class="ctag s">Bitter Gourd</span>
+              <span class="ctag s">Okra</span>
+              <span class="ctag s">Bottle Gourd</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Wheat (early vars)</span>
+              <span class="ctag h">Chickpea</span>
+              <span class="ctag h">Lentils</span>
+              <span class="ctag h">Peas</span>
+              <span class="ctag h">Vegetables</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Temperature rises rapidly — irrigate Rabi crops well before harvest. Start summer crop nurseries & apply mulching to conserve soil moisture.</div>
+        </div>
+
+        <!-- APRIL -->
+        <div class="mcard" data-s="zaid" data-m="3">
+          <div class="mcard-head"><div class="mname">🗓 April</div></div>
+          <span class="sbadge z">🌸 Zaid Season</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow Now</div>
+            <div class="ctags">
+              <span class="ctag s">Groundnut</span>
+              <span class="ctag s">Moong (Green Gram)</span>
+              <span class="ctag s">Cowpea</span>
+              <span class="ctag s">Sunflower</span>
+              <span class="ctag s">Sesame</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Wheat</span>
+              <span class="ctag h">Barley</span>
+              <span class="ctag h">Mustard</span>
+              <span class="ctag h">Onion (main)</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Major Rabi harvest month! Thresh & dry crops properly before storage. Good time to plough and prepare fields for Kharif season.</div>
+        </div>
+
+        <!-- MAY -->
+        <div class="mcard" data-s="zaid" data-m="4">
+          <div class="mcard-head"><div class="mname">🗓 May</div></div>
+          <span class="sbadge z">🌸 Zaid / Pre-Kharif</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow Now</div>
+            <div class="ctags">
+              <span class="ctag s">Okra</span>
+              <span class="ctag s">Bottle Gourd</span>
+              <span class="ctag s">Sponge Gourd</span>
+              <span class="ctag s">Maize (summer)</span>
+              <span class="ctag s">Cowpea</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Watermelon</span>
+              <span class="ctag h">Muskmelon</span>
+              <span class="ctag h">Cucumber</span>
+              <span class="ctag h">Bitter Gourd</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Extreme heat — provide shade nets for nurseries. Irrigate twice weekly. Begin pre-Kharif field prep: deep ploughing & manure application.</div>
+        </div>
+
+        <!-- JUNE -->
+        <div class="mcard" data-s="kharif" data-m="5">
+          <div class="mcard-head"><div class="mname">🗓 June</div></div>
+          <span class="sbadge k">☀️ Kharif Season Begins</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow Now</div>
+            <div class="ctags">
+              <span class="ctag s">Rice (nursery)</span>
+              <span class="ctag s">Maize</span>
+              <span class="ctag s">Jowar</span>
+              <span class="ctag s">Cotton</span>
+              <span class="ctag s">Soybean</span>
+              <span class="ctag s">Groundnut</span>
+              <span class="ctag s">Sugarcane</span>
+              <span class="ctag s">Arhar</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Moong (summer)</span>
+              <span class="ctag h">Cowpea (summer)</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Kharif starts with monsoon onset! Prepare paddy nurseries 25–30 days before transplanting. Test soil & apply recommended fertilizers before sowing.</div>
+        </div>
+
+        <!-- JULY -->
+        <div class="mcard" data-s="kharif" data-m="6">
+          <div class="mcard-head"><div class="mname">🗓 July</div></div>
+          <span class="sbadge k">☀️ Kharif Season</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow / Transplant</div>
+            <div class="ctags">
+              <span class="ctag s">Rice (transplant)</span>
+              <span class="ctag s">Arhar</span>
+              <span class="ctag s">Turmeric</span>
+              <span class="ctag s">Ginger</span>
+              <span class="ctag s">Late Cotton</span>
+              <span class="ctag s">Sesame</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Baby Corn (early)</span>
+              <span class="ctag h">Summer Vegetables</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Peak transplanting month for paddy — maintain 20×15 cm spacing for better tillering. Control stem borer with pheromone traps & neem spray.</div>
+        </div>
+
+        <!-- AUGUST -->
+        <div class="mcard" data-s="kharif" data-m="7">
+          <div class="mcard-head"><div class="mname">🗓 August</div></div>
+          <span class="sbadge k">☀️ Kharif Season</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow Now</div>
+            <div class="ctags">
+              <span class="ctag s">Onion (Kharif)</span>
+              <span class="ctag s">Radish</span>
+              <span class="ctag s">Spinach</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌿 Growing Strong</div>
+            <div class="ctags">
+              <span class="ctag g">Rice</span>
+              <span class="ctag g">Maize</span>
+              <span class="ctag g">Cotton</span>
+              <span class="ctag g">Soybean</span>
+              <span class="ctag g">Arhar</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Maize (early)</span>
+              <span class="ctag h">Cluster Beans</span>
+              <span class="ctag h">Cowpea</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Watch for leaf blast in rice — spray tricyclazole if spotted. Apply phosphorus to cotton at boll-formation stage for better yield.</div>
+        </div>
+
+        <!-- SEPTEMBER -->
+        <div class="mcard" data-s="kharif" data-m="8">
+          <div class="mcard-head"><div class="mname">🗓 September</div></div>
+          <span class="sbadge k">☀️ Kharif Harvest</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow / Prepare</div>
+            <div class="ctags">
+              <span class="ctag s">Potato (early)</span>
+              <span class="ctag s">Onion (Rabi nursery)</span>
+              <span class="ctag s">Early Mustard (Toria)</span>
+              <span class="ctag s">Coriander</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Soybean</span>
+              <span class="ctag h">Groundnut</span>
+              <span class="ctag h">Cotton (early)</span>
+              <span class="ctag h">Maize</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Start Rabi field preparations after Kharif harvest. Apply 10–12 t/ha farmyard manure. Monsoon receding — manage drainage carefully.</div>
+        </div>
+
+        <!-- OCTOBER -->
+        <div class="mcard" data-s="rabi" data-m="9">
+          <div class="mcard-head"><div class="mname">🗓 October</div></div>
+          <span class="sbadge r">❄️ Rabi Season Begins</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow Now</div>
+            <div class="ctags">
+              <span class="ctag s">Wheat</span>
+              <span class="ctag s">Chickpea</span>
+              <span class="ctag s">Mustard</span>
+              <span class="ctag s">Onion (Rabi)</span>
+              <span class="ctag s">Masoor (Lentil)</span>
+              <span class="ctag s">Peas</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Rice</span>
+              <span class="ctag h">Maize</span>
+              <span class="ctag h">Soybean</span>
+              <span class="ctag h">Groundnut</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Major Kharif harvest month! After harvest, begin Rabi — optimal wheat sowing window is Oct 15 to Nov 15 for highest yield.</div>
+        </div>
+
+        <!-- NOVEMBER -->
+        <div class="mcard" data-s="rabi" data-m="10">
+          <div class="mcard-head"><div class="mname">🗓 November</div></div>
+          <span class="sbadge r">❄️ Rabi Season</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow Now</div>
+            <div class="ctags">
+              <span class="ctag s">Wheat</span>
+              <span class="ctag s">Barley</span>
+              <span class="ctag s">Lentils</span>
+              <span class="ctag s">Peas</span>
+              <span class="ctag s">Late Mustard</span>
+              <span class="ctag s">Fenugreek</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Cotton</span>
+              <span class="ctag h">Late Rice</span>
+              <span class="ctag h">Arhar</span>
+              <span class="ctag h">Sugarcane (begins)</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Timely wheat sowing before Nov 15 gives 10–15% higher yield. Apply full basal dose of DAP and potash at sowing time.</div>
+        </div>
+
+        <!-- DECEMBER -->
+        <div class="mcard" data-s="rabi" data-m="11">
+          <div class="mcard-head"><div class="mname">🗓 December</div></div>
+          <span class="sbadge r">❄️ Rabi Season</span>
+          <div class="csec">
+            <div class="csec-title">🌱 Sow Now</div>
+            <div class="ctags">
+              <span class="ctag s">Cabbage</span>
+              <span class="ctag s">Cauliflower</span>
+              <span class="ctag s">Broccoli</span>
+              <span class="ctag s">Coriander</span>
+              <span class="ctag s">Spinach</span>
+              <span class="ctag s">Garlic</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌿 Growing Strong</div>
+            <div class="ctags">
+              <span class="ctag g">Wheat</span>
+              <span class="ctag g">Mustard</span>
+              <span class="ctag g">Chickpea</span>
+              <span class="ctag g">Peas</span>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="csec-title">🌻 Harvest Now</div>
+            <div class="ctags">
+              <span class="ctag h">Carrot</span>
+              <span class="ctag h">Radish</span>
+              <span class="ctag h">Spinach</span>
+              <span class="ctag h">Peas (early varieties)</span>
+            </div>
+          </div>
+          <div class="mtip">💡 Cold weather — irrigate wheat at crown-root initiation stage (21 days after sowing). Use polythene covers at night to protect tender crops from frost.</div>
+        </div>
+
+      </div><!-- /mgrid -->
+    </div><!-- /cal-wrap -->
+
+    <footer>
+      <p>© 2026 <a href="index.html">AgriLearn</a> — Empowering farmers with knowledge 🌱</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+      function filterSeason(season, btn) {
+        document.querySelectorAll('.mcard').forEach(c => {
+          c.classList.toggle('cal-hidden', season !== 'all' && c.dataset.s !== season);
+        });
+        document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const m = new Date().getMonth();
+        const card = document.querySelector(`.mcard[data-m="${m}"]`);
+        if (card) {
+          card.classList.add('this-month');
+          const pill = document.createElement('span');
+          pill.className = 'now-pill';
+          pill.textContent = '📍 This Month';
+          card.querySelector('.mcard-head').appendChild(pill);
+          setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'center' }), 700);
+        }
+
+        // Staggered fade-in animation
+        document.querySelectorAll('.mcard').forEach((el, i) => {
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(28px)';
+          el.style.transition = `opacity 0.5s ease ${i * 0.06}s, transform 0.5s ease ${i * 0.06}s, border-color 0.3s, box-shadow 0.3s`;
+          setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+          }, 80 + i * 60);
+        });
+      });
+    </script>
+  </body>
+</html>

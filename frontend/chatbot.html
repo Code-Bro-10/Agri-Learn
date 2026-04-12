@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Farming Assistant – AgriLearn</title>
+    <meta name="description" content="Ask our AI farming assistant anything about crops, soil, irrigation, and more — in English or Marathi." />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4ade80" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+  </head>
+  <body>
+
+    <!-- NAVBAR -->
+    <nav>
+      <a href="index.html" class="nav-logo">🌱 AgriLearn</a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="chatbot.html" class="active">AI Assistant</a></li>
+        <li><a href="calendar.html">📅 Calendar</a></li>
+        <li><a href="diseases.html">🐛 Diseases</a></li>
+        <li><a href="fertilizer.html">🧪 Fertilizer</a></li>
+      </ul>
+      <div class="nav-right">
+        <select class="lang-select" onchange="changeLanguage(this.value)" id="langSelect" aria-label="Select language">
+          <option value="en">🌐 English</option>
+          <option value="mr">🌐 Marathi</option>
+          <option value="hi">🌐 Hindi</option>
+          <option value="ta">🌐 Tamil</option>
+          <option value="te">🌐 Telugu</option>
+        </select>
+        <button class="profile-btn" id="profileBtn" onclick="openAuth()" aria-label="Profile">
+          <span>👤</span><span>Sign In</span>
+        </button>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle theme">🌙</button>
+      </div>
+    </nav>
+
+    <!-- CHAT PAGE -->
+    <main class="chat-page">
+
+      <!-- Header -->
+      <div class="chat-header">
+        <h2 id="chatTitle">Ask the Farming Assistant 🌾</h2>
+        <p id="chatSubtitle">Powered by AI — ask anything about crops, soil, weather, or pest control</p>
+      </div>
+
+      <!-- Chat Window -->
+      <div class="chat-container" id="chatContainer" role="main" aria-label="Chat Interface">
+
+        <!-- Toolbar -->
+        <div class="chat-toolbar">
+          <div class="chat-bot-info">
+            <div class="bot-avatar" aria-hidden="true">🌾</div>
+            <div>
+              <div class="bot-name" id="botName">AgriBot</div>
+              <div class="bot-status">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span id="botStatus">Online &amp; Ready</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <label class="autospeak-label" title="Auto-read bot responses aloud">
+              <input type="checkbox" id="autoSpeakToggle" onchange="toggleAutoSpeak(this.checked)"> 🔊 Auto-speak
+            </label>
+            <button class="btn btn-ghost" id="clearBtn" onclick="clearChat()" title="Clear conversation" style="font-size:0.82rem;padding:0.4rem 0.9rem;">
+              🗑 Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- Restore History Banner (shown by JS if history exists) -->
+        <div id="restoreBanner" style="display:none;"></div>
+
+        <!-- Messages -->
+        <div class="chat-output" id="chat-output" role="log" aria-live="polite" aria-label="Chat messages">
+          <!-- Empty state shown by JS -->
+        </div>
+
+        <!-- Quick Suggestions -->
+        <div class="quick-suggestions" id="suggestions">
+          <button class="suggestion-chip" id="sug1" onclick="useSuggestion(this)">💧 Best irrigation methods?</button>
+          <button class="suggestion-chip" id="sug2" onclick="useSuggestion(this)">🐛 How to control pests?</button>
+          <button class="suggestion-chip" id="sug3" onclick="useSuggestion(this)">🌱 Improve soil quality?</button>
+          <button class="suggestion-chip" id="sug4" onclick="useSuggestion(this)">🌾 Best crops for summer?</button>
+        </div>
+
+
+
+        <!-- Input Area -->
+        <div class="chat-input-area">
+          <textarea
+            id="userInput"
+            placeholder="Type your farming question here…"
+            rows="1"
+            aria-label="Type your message"
+            maxlength="500"
+            onkeydown="handleKeydown(event)"
+            oninput="updateCharCount()"
+          ></textarea>
+          <button class="mic-btn" id="micBtn" onclick="toggleVoice()" title="Voice input" aria-label="Voice input">🎤</button>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Send message" title="Send">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+
+        <!-- Footer bar -->
+        <div class="chat-footer-bar">
+          <div class="chat-lang-wrap">
+            <span>🌐</span>
+            <select class="lang-select" onchange="changeChatLanguage(this.value)" id="chatLangSelect" aria-label="Chat language" style="padding:0.2rem 1.8rem 0.2rem 0.5rem;font-size:0.75rem;">
+              <option value="en">English</option>
+              <option value="mr">Marathi</option>
+            </select>
+          </div>
+          <span class="char-count" id="charCount">0 / 500</span>
+        </div>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

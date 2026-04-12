@@ -1,0 +1,25 @@
+{
+  "name": "AgriLearn – Smart Farming for Everyone",
+  "short_name": "AgriLearn",
+  "description": "Learn modern farming techniques with AI-powered guidance, video lessons, and expert knowledge.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1f0a",
+  "theme_color": "#4ade80",
+  "orientation": "any",
+  "categories": ["education"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

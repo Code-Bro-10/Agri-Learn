@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crop Disease Library – AgriLearn</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4ade80" />
+    <style>
+      .lib-header { text-align: center; padding: 4rem 2rem 2rem; }
+      .lib-title { font-family: 'Outfit', sans-serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; background: linear-gradient(135deg, #ffffff 0%, #86efac 50%, #4ade80 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+      .disease-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; padding: 0 2.5rem 4rem; max-width: 1200px; margin: 0 auto; }
+      .d-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 1.5rem; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: transform 0.3s, box-shadow 0.3s; position: relative; overflow: hidden; }
+      .d-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(74,222,128,0.2); }
+      .d-icon { font-size: 2.5rem; margin-bottom: 1rem; display: inline-block; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 16px; }
+      .d-name { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #f0fff0; margin-bottom: 0.5rem; }
+      .d-crop { font-size: 0.8rem; color: #a3e635; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 1rem; }
+      .d-symptoms { margin-bottom: 1rem; }
+      .d-cure { padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
+      .d-cure-title { font-size: 0.85rem; font-weight: 700; color: #4ade80; margin-bottom: 0.4rem; }
+      .d-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; }
+      .search-box { display: flex; max-width: 500px; margin: 0 auto 3rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 99px; padding: 0.5rem 1rem; align-items: center; backdrop-filter: blur(8px); }
+      .search-input { background: none; border: none; color: #fff; width: 100%; outline: none; padding: 0.5rem; font-family: 'Inter', sans-serif; }
+    </style>
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav>
+      <a href="index.html" class="nav-logo">🌱 AgriLearn</a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="chatbot.html">AI Assistant</a></li>
+        <li><a href="calendar.html">📅 Calendar</a></li>
+        <li><a href="diseases.html" class="active">🐛 Diseases</a></li>
+        <li><a href="fertilizer.html">🧪 Fertilizer</a></li>
+      </ul>
+      <div class="nav-right">
+        <select class="lang-select" onchange="changeLanguage(this.value)" id="langSelect">
+          <option value="en">🌐 English</option>
+          <option value="mr">🌐 Marathi</option>
+          <option value="hi">🌐 Hindi</option>
+          <option value="ta">🌐 Tamil</option>
+          <option value="te">🌐 Telugu</option>
+        </select>
+        <button class="profile-btn" onclick="openAuth()"><span>👤</span><span>Sign In</span></button>
+        <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+      </div>
+    </nav>
+
+    <div class="lib-header">
+      <span class="hero-badge">🐛 Plant Health</span>
+      <h1 class="lib-title">Crop Disease Library</h1>
+      <p style="color:var(--text-secondary); margin-bottom: 2rem;">Identify and treat common crop diseases quickly.</p>
+      
+      <div class="search-box">
+        <span style="opacity: 0.5; margin-right: 0.5rem;">🔍</span>
+        <input type="text" class="search-input" id="searchDis" onkeyup="filterDiseases()" placeholder="Search diseases or crops (e.g. Wheat, Blight)..." />
+      </div>
+    </div>
+
+    <div class="disease-grid" id="disGrid">
+      <div class="d-card">
+        <div class="d-icon">🦠</div>
+        <div class="d-name">Late Blight</div>
+        <div class="d-crop">🥔 Potato & Tomato</div>
+        <div class="d-symptoms">
+          <div class="d-cure-title">Symptoms</div>
+          <p class="d-text">Dark water-soaked spots on leaves. White fungal growth on undersides in humid conditions.</p>
+        </div>
+        <div class="d-cure">
+          <div class="d-cure-title">Treatment</div>
+          <p class="d-text">Apply fungicides such as Mancozeb or Chlorothalonil. Avoid overhead watering.</p>
+        </div>
+      </div>
+
+      <div class="d-card">
+        <div class="d-icon">🍂</div>
+        <div class="d-name">Powdery Mildew</div>
+        <div class="d-crop">🥒 Cucumbers, Peas, Grapes</div>
+        <div class="d-symptoms">
+          <div class="d-cure-title">Symptoms</div>
+          <p class="d-text">White, powdery fungal spots on leaves and stems. Leaves may turn yellow and drop off.</p>
+        </div>
+        <div class="d-cure">
+          <div class="d-cure-title">Treatment</div>
+          <p class="d-text">Spray neem oil or sulfur-based organic fungicides. Ensure good air circulation.</p>
+        </div>
+      </div>
+
+      <div class="d-card">
+        <div class="d-icon">🌾</div>
+        <div class="d-name">Yellow Rust</div>
+        <div class="d-crop">🌾 Wheat</div>
+        <div class="d-symptoms">
+          <div class="d-cure-title">Symptoms</div>
+          <p class="d-text">Yellowish-orange pustules arranged in stripes on leaves. Severely impacts yield.</p>
+        </div>
+        <div class="d-cure">
+          <div class="d-cure-title">Treatment</div>
+          <p class="d-text">Spray Propiconazole or Tebuconazole as soon as identified. Use resistant seed varieties.</p>
+        </div>
+      </div>
+
+      <div class="d-card">
+        <div class="d-icon">⚫</div>
+        <div class="d-name">Black Spot</div>
+        <div class="d-crop">🌹 Roses & Fruit Trees</div>
+        <div class="d-symptoms">
+          <div class="d-cure-title">Symptoms</div>
+          <p class="d-text">Circular black spots on leaves with fringed edges. Leaves eventually turn yellow and drop.</p>
+        </div>
+        <div class="d-cure">
+          <div class="d-cure-title">Treatment</div>
+          <p class="d-text">Remove infected leaves. Spray copper fungicide or a baking soda solution every 7 days.</p>
+        </div>
+      </div>
+
+      <div class="d-card">
+        <div class="d-icon">🐛</div>
+        <div class="d-name">Fall Armyworm</div>
+        <div class="d-crop">🌽 Maize & Sorghum</div>
+        <div class="d-symptoms">
+          <div class="d-cure-title">Symptoms</div>
+          <p class="d-text">Massive defoliation. Larvae eat through the whorl of the plant causing "window pane" damage.</p>
+        </div>
+        <div class="d-cure">
+          <div class="d-cure-title">Treatment</div>
+          <p class="d-text">Use pheromone traps. Spray Spinetoram or Emamectin Benzoate inside the whorl.</p>
+        </div>
+      </div>
+      
+      <div class="d-card">
+        <div class="d-icon">🍌</div>
+        <div class="d-name">Panama Disease</div>
+        <div class="d-crop">🍌 Banana</div>
+        <div class="d-symptoms">
+          <div class="d-cure-title">Symptoms</div>
+          <p class="d-text">Yellowing of older leaves, starting at the margins. Stems split and roots rot.</p>
+        </div>
+        <div class="d-cure">
+          <div class="d-cure-title">Treatment</div>
+          <p class="d-text">Soil-borne fungus. No chemical cure. Burn infected plants and plant resistant varieties like Grand Naine.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>© 2026 AgriLearn</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+      function filterDiseases() {
+        const query = document.getElementById('searchDis').value.toLowerCase();
+        const cards = document.querySelectorAll('.d-card');
+        cards.forEach(card => {
+          const text = card.textContent.toLowerCase();
+          card.style.display = text.includes(query) ? 'block' : 'none';
+        });
+      }
+    </script>
+  </body>
+</html>

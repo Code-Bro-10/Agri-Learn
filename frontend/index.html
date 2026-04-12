@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AgriLearn – Smart Farming for Everyone</title>
+    <meta name="description" content="Learn modern farming techniques with AgriLearn. Courses, AI chatbot, and resources for smart agriculture." />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4ade80" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+  </head>
+  <body>
+
+    <!-- NAVBAR -->
+    <nav>
+      <a href="index.html" class="nav-logo">🌱 AgriLearn</a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="chatbot.html">AI Assistant</a></li>
+        <li><a href="calendar.html">📅 Calendar</a></li>
+        <li><a href="diseases.html">🐛 Diseases</a></li>
+        <li><a href="fertilizer.html">🧪 Fertilizer</a></li>
+      </ul>
+      <div class="nav-right">
+        <select class="lang-select" onchange="changeLanguage(this.value)" id="langSelect" aria-label="Select language">
+          <option value="en">🌐 English</option>
+          <option value="mr">🌐 Marathi</option>
+          <option value="hi">🌐 Hindi</option>
+          <option value="ta">🌐 Tamil</option>
+          <option value="te">🌐 Telugu</option>
+        </select>
+        <button class="profile-btn" id="profileBtn" onclick="openAuth()" aria-label="Profile">
+          <span>👤</span><span>Sign In</span>
+        </button>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle theme">🌙</button>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+      <span class="hero-badge">✨ Trusted by 10,000+ farmers</span>
+      <h2 id="heading">Learn Farming<br>Digitally</h2>
+      <p id="subheading">Smart, modern farming techniques at your fingertips. AI-powered guidance, video lessons, and expert knowledge.</p>
+      <div class="hero-cta">
+        <a href="courses.html" class="btn btn-primary" id="exploreCourses">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+          Explore Courses
+        </a>
+        <a href="chatbot.html" class="btn btn-ghost" id="askAI">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Ask AI Assistant
+        </a>
+      </div>
+    </section>
+
+    <!-- WEATHER WIDGET -->
+    <div class="weather-wrap">
+      <div class="weather-widget" id="weatherWidget">
+        <span class="weather-loading">🌍 Loading weather…</span>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-strip">
+      <div class="stat-item" style="animation-delay:0.1s">
+        <div class="stat-number" id="statCourses" data-target="25">0+</div>
+        <div class="stat-label" id="statCoursesLabel">Courses</div>
+      </div>
+      <div class="stat-item" style="animation-delay:0.2s">
+        <div class="stat-number" data-target="10000">0+</div>
+        <div class="stat-label">Farmers Trained</div>
+      </div>
+      <div class="stat-item" style="animation-delay:0.3s">
+        <div class="stat-number" data-target="5">0</div>
+        <div class="stat-label">Languages</div>
+      </div>
+      <div class="stat-item" style="animation-delay:0.4s">
+        <div class="stat-number" data-target="24">0</div>
+        <div class="stat-label">AI Support (hrs)</div>
+      </div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div class="section-header" style="margin-top:2rem">
+      <span class="section-tag" id="categoriesTag">Browse Topics</span>
+      <h3 class="section-title" id="categoriesTitle">What do you want to learn?</h3>
+    </div>
+
+    <section class="categories" id="categoriesSection">
+      <div class="card" onclick="window.location='courses.html'" id="cardCrop">
+        <span class="card-icon">🌾</span>
+        <div class="card-title">Crop Farming</div>
+        <div class="card-desc">Seasonal crops, soil management & yield optimization</div>
+      </div>
+      <div class="card" onclick="window.location='courses.html'" id="cardOrganic">
+        <span class="card-icon">🌿</span>
+        <div class="card-title">Organic Farming</div>
+        <div class="card-desc">Chemical-free growing with natural processes</div>
+      </div>
+      <div class="card" onclick="window.location='courses.html'" id="cardIrrigation">
+        <span class="card-icon">💧</span>
+        <div class="card-title">Smart Irrigation</div>
+        <div class="card-desc">Water-saving irrigation techniques &amp; drip systems</div>
+      </div>
+      <div class="card" onclick="window.location='courses.html'" id="cardPest">
+        <span class="card-icon">🐛</span>
+        <div class="card-title">Pest Control</div>
+        <div class="card-desc">Integrated pest management &amp; disease prevention</div>
+      </div>
+      <div class="card" onclick="window.location='courses.html'" id="cardSoil">
+        <span class="card-icon">🌍</span>
+        <div class="card-title">Soil Science</div>
+        <div class="card-desc">Understand soil health, nutrients &amp; composting</div>
+      </div>
+      <div class="card" onclick="window.location='chatbot.html'" id="cardAI">
+        <span class="card-icon">🤖</span>
+        <div class="card-title">AI Assistant</div>
+        <div class="card-desc">Get instant answers to your farming questions</div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" id="featuresSection">
+      <div class="section-header">
+        <span class="section-tag">Why AgriLearn?</span>
+        <h3 class="section-title">Everything a farmer needs</h3>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card" id="feat1">
+          <div class="feature-icon">🎥</div>
+          <div class="feature-title">Video Learning</div>
+          <div class="feature-desc">Watch expert-curated farming tutorials anytime, anywhere — in English &amp; Marathi.</div>
+        </div>
+        <div class="feature-card" id="feat2">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-title">AI Chatbot</div>
+          <div class="feature-desc">Ask farming questions in your language. Our AI gives smart, contextual answers instantly.</div>
+        </div>
+        <div class="feature-card" id="feat3">
+          <div class="feature-icon">🌐</div>
+          <div class="feature-title">Bilingual Support</div>
+          <div class="feature-desc">Full English and Marathi language support so language is never a barrier.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <p>© 2026 <a href="index.html">AgriLearn</a> — Empowering farmers with knowledge 🌱</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

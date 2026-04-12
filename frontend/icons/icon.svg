@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#0a1f0a"/>
+  <defs>
+    <radialGradient id="g" cx="35%" cy="35%">
+      <stop offset="0%" stop-color="#4ade80" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0a1f0a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="100" fill="url(#g)"/>
+  <!-- Stem -->
+  <line x1="256" y1="400" x2="256" y2="180" stroke="#4ade80" stroke-width="18" stroke-linecap="round"/>
+  <!-- Right leaf -->
+  <path d="M256 270 C280 230 340 215 360 195 C365 240 340 285 256 270 Z" fill="#4ade80"/>
+  <!-- Left leaf -->
+  <path d="M256 320 C232 282 172 268 152 248 C147 290 174 335 256 320 Z" fill="#86efac"/>
+  <!-- Top bud -->
+  <path d="M256 180 C244 148 248 116 256 95 C264 116 268 148 256 180 Z" fill="#4ade80"/>
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#4ade80" stroke-width="6" stroke-opacity="0.2"/>
+</svg>
