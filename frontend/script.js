@@ -256,7 +256,9 @@ async function sendMessage() {
     const headers = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = "Bearer " + token;
 
-    const res = await fetch("http://localhost:3000/api/chat", {
+    const API_BASE = (window.location.port === '5500' || window.location.port === '5000') ? 'http://localhost:3000/api' : '/api';
+    
+    const res = await fetch(`${API_BASE}/chat`, {
       method: "POST",
       headers,
       body: JSON.stringify({ message: payload }),
@@ -855,14 +857,15 @@ async function submitAuth() {
   submitBtn.textContent = 'Loading...';
 
   try {
-    let url = 'http://localhost:3000/api/auth/login';
+    const API_BASE = (window.location.port === '5500' || window.location.port === '5000') ? 'http://localhost:3000/api' : '/api';
+    let url = `${API_BASE}/auth/login`;
     let payload = { email, password };
 
     if (currentAuthMode === 'register') {
       const name = document.getElementById('authName')?.value.trim();
       if (!name) { showToast('⚠️ Name is required'); submitBtn.disabled = false; submitBtn.textContent = 'Register 🌱'; return; }
       const av = document.querySelector('.avatar-option.selected')?.dataset.av || '👨‍🌾';
-      url = 'http://localhost:3000/api/auth/register';
+      url = `${API_BASE}/auth/register`;
       payload = { name, email, password, avatar: av };
     }
 
