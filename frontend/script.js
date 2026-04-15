@@ -252,9 +252,13 @@ async function sendMessage() {
       ? `শেতীविषयी मराठीत उत्तर द्या: ${message}`
       : message;
 
-    const res = await fetch("/api/chat", {
+    const token = localStorage.getItem('agrilearn-token');
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = "Bearer " + token;
+
+    const res = await fetch("http://localhost:3000/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ message: payload }),
     });
 
@@ -719,57 +723,171 @@ async function fetchWeather() {
 const PROFILE_KEY = 'agrilearn-profile';
 const AVATARS = ['👨‍🌾','👩‍🌾','🧑‍🌾','👴','👵','🧑','👦‍🌾','👧‍🌾'];
 
+let currentAuthMode = 'login'; // 'login' or 'register'
+
 function initAuthUI() {
   if (document.getElementById('authModal')) return;
   const el = document.createElement('div');
   el.className = 'modal-overlay'; el.id = 'authModal';
   el.onclick = e => { if (e.target === el) closeAuth(); };
+  
   el.innerHTML = `
-    <div class="auth-modal">
+    <div class="auth-modal" style="max-height: 90vh; overflow-y: auto;">
       <div class="auth-modal-icon">🌱</div>
-      <h3 id="authTitle">Welcome to AgriLearn</h3>
-      <p id="authSub">Create your farmer profile for a personalized experience</p>
-      <input class="auth-input" id="authName" placeholder="Your name (e.g. Ramesh Patil)" maxlength="40"/>
-      <div class="avatar-label">Choose your avatar</div>
-      <div class="avatar-picker">
-        ${AVATARS.map((a, i) => `<button class="avatar-option${i===0?' selected':''}" onclick="pickAvatar(this,'${a}')" data-av="${a}">${a}</button>`).join('')}
+      <h3 id="authTitle">Welcome Back!</h3>
+      <p id="authSub">Sign in to your AgriLearn account</p>
+      
+      <div style="display:flex; gap:10px; margin-bottom: 20px;">
+        <button id="tabLogin" class="btn btn-primary" style="flex:1" onclick="switchAuthMode('login')">Login</button>
+        <button id="tabRegister" class="btn" style="flex:1; background: transparent; border: 1px solid var(--border-color); color: var(--text-primary);" onclick="switchAuthMode('register')">Register</button>
       </div>
-      <button class="btn btn-primary" style="width:100%" onclick="saveProfile()">Save Profile 🌱</button>
-      <button class="auth-dismiss" onclick="closeAuth()">Maybe later</button>
+
+      <div id="registerFields" style="display: none;">
+        <input class="auth-input" id="authName" placeholder="Your name (e.g. Ramesh Patil)" maxlength="40" style="margin-bottom: 10px;"/>
+        <div class="avatar-label">Choose your avatar</div>
+        <div class="avatar-picker" style="margin-bottom: 10px;">
+          ${AVATARS.map((a, i) => `<button class="avatar-option${i===0?' selected':''}" onclick="pickAvatar(this,'${a}')" data-av="${a}">${a}</button>`).join('')}
+        </div>
+      </div>
+      
+      <input type="email" class="auth-input" id="authEmail" placeholder="Email Address" style="margin-bottom: 10px;"/>
+      <input type="password" class="auth-input" id="authPassword" placeholder="Password" style="margin-bottom: 15px;"/>
+      
+      <button class="btn btn-primary" id="authSubmitBtn" style="width:100%" onclick="submitAuth()">Sign In</button>
+      <button class="auth-dismiss" onclick="closeAuth()">Cancel</button>
+
+      <!-- Logout Button Structure (Hidden initially) -->
+      <div id="logoutSection" style="display:none; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+        <button class="btn" style="width:100%; background: #ef4444; color: white;" onclick="logout()">Logout</button>
+      </div>
     </div>`;
   document.body.appendChild(el);
 }
 
+window.switchAuthMode = function(mode) {
+  currentAuthMode = mode;
+  document.getElementById('registerFields').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('authTitle').textContent = mode === 'register' ? 'Create Account' : 'Welcome Back!';
+  document.getElementById('authSub').textContent = mode === 'register' ? 'Create your farmer profile' : 'Sign in to your AgriLearn account';
+  document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Register 🌱' : 'Sign In';
+  
+  const bgLogin = mode === 'login' ? 'var(--primary-color)' : 'transparent';
+  const colorLogin = mode === 'login' ? 'white' : 'var(--text-primary)';
+  const borderLogin = mode === 'login' ? 'none' : '1px solid var(--border-color)';
+  
+  const bgReg = mode === 'register' ? 'var(--primary-color)' : 'transparent';
+  const colorReg = mode === 'register' ? 'white' : 'var(--text-primary)';
+  const borderReg = mode === 'register' ? 'none' : '1px solid var(--border-color)';
+  
+  const tLogin = document.getElementById('tabLogin');
+  const tReg = document.getElementById('tabRegister');
+  
+  if (tLogin) { tLogin.style.background = bgLogin; tLogin.style.color = colorLogin; tLogin.style.border = borderLogin; }
+  if (tReg) { tReg.style.background = bgReg; tReg.style.color = colorReg; tReg.style.border = borderReg; }
+};
+
 function openAuth() {
   initAuthUI();
   const p = getProfile();
+  
+  const logoutSec = document.getElementById('logoutSection');
+  const actionBtn = document.getElementById('authSubmitBtn');
+  const passInp = document.getElementById('authPassword');
+  const emailInp = document.getElementById('authEmail');
+  const nameInp = document.getElementById('authName');
+  const tabL = document.getElementById('tabLogin');
+  const tabR = document.getElementById('tabRegister');
+  
   if (p) {
-    document.getElementById('authTitle').textContent = 'Edit Profile';
-    document.getElementById('authSub').textContent = 'Update your name or avatar';
-    document.getElementById('authName').value = p.name;
-    document.querySelectorAll('.avatar-option').forEach(b => b.classList.toggle('selected', b.dataset.av === p.avatar));
+    document.getElementById('authTitle').textContent = 'Profile';
+    document.getElementById('authSub').textContent = 'You are signed in';
+    logoutSec.style.display = 'block';
+    
+    // Hide standard login fields since they are logged in
+    actionBtn.style.display = 'none';
+    passInp.style.display = 'none';
+    emailInp.style.display = 'none';
+    nameInp.style.display = 'none';
+    document.getElementById('registerFields').style.display = 'none';
+    if(tabL) tabL.style.display = 'none';
+    if(tabR) tabR.style.display = 'none';
+    
   } else {
-    if (document.getElementById('authName')) document.getElementById('authName').value = '';
+    document.getElementById('authTitle').textContent = 'Welcome Back!';
+    document.getElementById('authSub').textContent = 'Sign in to your AgriLearn account';
+    logoutSec.style.display = 'none';
+    actionBtn.style.display = 'block';
+    passInp.style.display = 'block';
+    emailInp.style.display = 'block';
+    passInp.value = '';
+    emailInp.value = '';
+    
+    if(tabL) tabL.style.display = 'block';
+    if(tabR) tabR.style.display = 'block';
+    switchAuthMode('login');
   }
   document.getElementById('authModal').classList.add('open');
-  setTimeout(() => document.getElementById('authName')?.focus(), 100);
+  if(!p) setTimeout(() => emailInp?.focus(), 100);
 }
 
 function closeAuth() { document.getElementById('authModal')?.classList.remove('open'); }
 
-function pickAvatar(el) {
+function pickAvatar(el, avatar) {
   document.querySelectorAll('.avatar-option').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
 }
 
-function saveProfile() {
-  const name = document.getElementById('authName')?.value.trim();
-  if (!name) { showToast('⚠️ Please enter your name'); return; }
-  const av = document.querySelector('.avatar-option.selected')?.dataset.av || '👨‍🌾';
-  localStorage.setItem(PROFILE_KEY, JSON.stringify({ name, avatar: av }));
+window.logout = function() {
+  localStorage.removeItem(PROFILE_KEY);
+  localStorage.removeItem('agrilearn-token');
   closeAuth();
   updateProfileNav();
-  showToast(`✅ Welcome, ${name}! 🌱`);
+  showToast('✅ Logged out successfully');
+};
+
+async function submitAuth() {
+  const email = document.getElementById('authEmail')?.value.trim();
+  const password = document.getElementById('authPassword')?.value;
+  if (!email || !password) { showToast('⚠️ Email and password are required'); return; }
+
+  const submitBtn = document.getElementById('authSubmitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Loading...';
+
+  try {
+    let url = 'http://localhost:3000/api/auth/login';
+    let payload = { email, password };
+
+    if (currentAuthMode === 'register') {
+      const name = document.getElementById('authName')?.value.trim();
+      if (!name) { showToast('⚠️ Name is required'); submitBtn.disabled = false; submitBtn.textContent = 'Register 🌱'; return; }
+      const av = document.querySelector('.avatar-option.selected')?.dataset.av || '👨‍🌾';
+      url = 'http://localhost:3000/api/auth/register';
+      payload = { name, email, password, avatar: av };
+    }
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Authentication failed');
+
+    // Save token and user details
+    localStorage.setItem('agrilearn-token', data.token);
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(data.user));
+    
+    closeAuth();
+    updateProfileNav();
+    showToast(`✅ Welcome, ${data.user.name}! 🌱`);
+  } catch (error) {
+    showToast(`⚠️ ${error.message}`);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = currentAuthMode === 'register' ? 'Register 🌱' : 'Sign In';
+  }
 }
 
 function getProfile() {
@@ -780,7 +898,7 @@ function updateProfileNav() {
   document.querySelectorAll('#profileBtn').forEach(btn => {
     const p = getProfile();
     btn.innerHTML = p
-      ? `<span>${p.avatar}</span><span class="profile-name">${p.name}</span>`
+      ? `<span>${p.avatar || '👤'}</span><span class="profile-name">${p.name}</span>`
       : '<span>👤</span><span>Sign In</span>';
   });
 }
